@@ -1,0 +1,17 @@
+[package]
+name = "flappyfish"
+version = "0.0.0-alpha0"
+edition = "2021"
+
+[dependencies.bevy]
+version = "0.11.3"
+features = ["dynamic_linking"]
+
+# Enable a small amount of optimisation in debug mode
+[profile.dev]
+opt-level = 1
+
+# Enable high optimisations for dependencies (incl. Bevy),
+# but not the code
+[profile.dev.package."*"]
+opt-level = 3
