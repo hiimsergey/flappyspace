@@ -1,11 +1,14 @@
 [package]
-name = "flappyfish"
+name = "flappyspace"
 version = "0.0.0-alpha0"
 edition = "2021"
 
+[dependencies]
+fastrand = "2.0.1"
+
 [dependencies.bevy]
 version = "0.11.3"
-features = ["dynamic_linking"]
+features = ["dynamic_linking", "wav"]
 
 # Enable a small amount of optimisation in debug mode
 [profile.dev]
