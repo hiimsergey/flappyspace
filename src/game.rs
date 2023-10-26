@@ -1,25 +1,31 @@
 // TODO
-// Update system: run only if state is GameState::Game
+// NOW add collision detection
+// NOW add score
 // BONUS add despawn animation
 	// import Ship
+// LATER increase avg distance and decrease ROCK_SPAWN_PERIOD
 use super::{
 	GameState,
 	Rock,
 	Ship,
 	despawn_screen
 };
-use bevy::prelude::*;
+use std::ops::{Range, RangeBounds};
+use bevy::{
+	prelude::*,
+	sprite::collide_aabb::{collide, Collision}
+};
 use fastrand;
 
 // TODO END comment them
+pub const JUMP_VELOCITY: f32 = 500.;
 const GRAVITY: f32 = 40.;
-const JUMP_VELOCITY: f32 = 500.;
 const ROCK_VELOCITY: f32 = 200.;
 const UPPER_BOUND: f32 = 400.;
 const BOTTOM_BOUND: f32 = -UPPER_BOUND;
-const RIGHT_BOUND: f32 = 500.;
-const LEFT_BOUND: f32 = -RIGHT_BOUND;
-const ROCK_SPAWN_PERIOD: f32 = 1.;
+const LEFT_BOUND: f32 = -500.;
+const RIGHT_BOUND_RANGE: Range<u16> = -LEFT_BOUND as u16..(-LEFT_BOUND + 150.) as u16;
+const ROCK_SPAWN_RANGE: Range<u8> = 4..6;
 
 pub struct GamePlugin;
 
@@ -34,14 +40,16 @@ struct RockTimer(Timer);
 impl Plugin for GamePlugin {
 	fn build(&self, app: &mut App) {
 		app
-			.insert_resource(RockTimer(Timer::from_seconds(ROCK_SPAWN_PERIOD, TimerMode::Repeating)))
-			.add_systems(OnEnter(GameState::Game), (spawn_rocks, lil_jump))
+			.insert_resource(RockTimer(Timer::from_seconds(fastrand::u8(ROCK_SPAWN_RANGE) as f32 * 0.25, TimerMode::Once)))
+			.add_systems(OnEnter(GameState::Game), spawn_rocks)
 			.add_systems(
 				Update,
 				(
-					update_ship,
+					periodic_rock_waves,
 					move_rocks,
-					periodic_rock_waves
+					update_ship,
+					check_collisions
+					// TODO RM
 					// check_collisions
 					// TODO MAYBE
 					// scoreboard_system
@@ -51,37 +59,17 @@ impl Plugin for GamePlugin {
 	}
 }
 
-// The ship performs a little jump at the start of the game
-fn lil_jump(
-	mut query: Query<&mut Ship>,
-) {
-	for mut ship in query.iter_mut() {
-		ship.velocity = JUMP_VELOCITY;
-		println!("{}", ship.velocity);
-	}
-}
-
-// Helper function because I'm lazy
-fn rock_from_y(y: f32, assets: &Res<AssetServer>) -> SpriteBundle {
-	SpriteBundle {
-		texture: assets.load("sprites/rock.png"),
-		transform: Transform::from_xyz(RIGHT_BOUND, y, 0.)
-			.with_scale(Vec3::splat(fastrand::u8(2..7) as f32)),
-		..default()
-	}
-}
-
 fn spawn_rocks(
- mut commands: Commands,
- assets: Res<AssetServer>
+	mut commands: Commands,
+	assets: Res<AssetServer>
 ) {
 	// TODO PLAN
-	// perpetual motion of the stones towards -x
+	// perpetual motion of the rocks towards -x
 	// if they reach LEFT_BOUND, despawn and spawn new wave
 	// wave consists of random number of randomly sized rocks
 	// BONUS from score XY and up, the waves move along y
 	commands.spawn((
-		rock_from_y(BOTTOM_BOUND, &assets),
+		rock_from_y(BOTTOM_BOUND + fastrand::u8(0..100) as f32, &assets),
 		// TODO MAYBE put this in a constant or create a default impl
 		Rock { velocity: ROCK_VELOCITY }, BottomRock
 	));
@@ -97,7 +85,7 @@ fn spawn_one_rock(
 ) {
 	if y_point > UPPER_BOUND { return; }
 
-	let y_distance = fastrand::u8(150..250) as f32;
+	let y_distance = fastrand::u8(128..) as f32;
 
 	commands.spawn((
 		rock_from_y(y_point + y_distance, &assets),
@@ -109,6 +97,18 @@ fn spawn_one_rock(
 	spawn_one_rock(y_point + y_distance, commands, assets);
 }
 
+// Helper function because I'm lazy
+fn rock_from_y(y: f32, assets: &Res<AssetServer>) -> SpriteBundle {
+	SpriteBundle {
+		texture: assets.load("sprites/rock.png"),
+		transform: Transform::from_xyz(fastrand::u16(RIGHT_BOUND_RANGE) as f32, y, fastrand::f32())
+			.with_scale(Vec3::splat(fastrand::u8(2..7) as f32))
+			// TODO TEST
+			.with_rotation(Quat::from_rotation_z(fastrand::f32() * 10.)),
+		..default()
+	}
+}
+
 fn periodic_rock_waves(
 	mut commands: Commands,
 	mut timer: ResMut<RockTimer>,
@@ -116,6 +116,10 @@ fn periodic_rock_waves(
 	time: Res<Time>
 ) {
 	if timer.tick(time.delta()).finished() {
+		commands.insert_resource(RockTimer(Timer::from_seconds(
+			fastrand::u8(ROCK_SPAWN_RANGE) as f32 * 0.25,
+			TimerMode::Once
+		)));
 		spawn_rocks(commands, assets);
 	}
 }
@@ -156,7 +160,7 @@ fn update_ship(
 			commands.spawn(
 				AudioBundle {
 					source: assets.load("sounds/jump.wav"),
-					..default()
+					settings: PlaybackSettings::DESPAWN
 				}
 			);
 
@@ -172,3 +176,54 @@ fn update_ship(
 		}
 	}
 }
+
+use std::io::Write; // TODO
+fn check_collisions(
+	mut commands: Commands,
+	mut ship_query: Query<&Transform, With<Ship>>,
+	mut game_state: ResMut<NextState<GameState>>,
+	rock_query: Query<&Transform, With<Rock>>
+) {
+	let ship_transform = ship_query.single_mut();
+
+	for transform in &rock_query {
+		if let Some(collision) = collide(
+			// position of rock
+			transform.translation,
+			// size of rock (scale * height/width of sprite in pixels -0.5)
+			transform.scale.truncate() * 11.5,
+			// position of ship
+			ship_transform.translation,
+			// size of ship (scale * height/width of sprite in pixels -0.5)
+			ship_transform.scale.truncate() * 19.5
+		) {
+			println!("
+					\n{}\n{}\n{}\n{}
+				",
+				transform.translation,
+				// size of rock
+				transform.scale.truncate(),
+				// position of ship
+				ship_transform.translation,
+				// size of ship
+				ship_transform.scale.truncate()
+			);
+			game_state.set(GameState::Dead);
+		}
+	}
+}
+
+// TODO LATER
+/*
+fn check_collisions(
+	mut commands: Commands,
+	mut ship_query: Query<&Transform, With<Ship>>,
+	rock_query: Query<&Transform, With<Rock>>
+) {
+	let ship_transform = &ship_query.single_mut();
+	for transform in &rock_query {
+		if transform.translation.x < 0.5
+		&& 
+	}
+}
+*/

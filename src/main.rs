@@ -1,5 +1,4 @@
 // TODO
-// add sounds    enter game    jump    clash
 // remove unnecessary fonts, sprites and sfx
 // predetermine window size
     // make bound dependent on them (see game.rs) 
@@ -7,9 +6,17 @@
     // if you succeed, write them here
 // write SOURCE.txt
 // rename the repo to flappyspace
+// BONUS spin ship when jumping
+// BONUS spawn some random rocks (size, rotation, position (sprite)) in menu screen
 // BONUS get better (jump) sounds
 // BONUS write own sprites (with background)
+// TODO END END
+// reconsider chosen numbers
+    // consider if they need to be const
+    // consider making some numbers const too
+// check and rewrite comments
 use bevy::prelude::*;
+use game::JUMP_VELOCITY;
 mod menu;
 mod game;
 // mod dead;
@@ -66,7 +73,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
                 .with_scale(Vec3::splat(3.)),
             ..default()
         },
-        Ship { velocity: 0. }
+        Ship { velocity: JUMP_VELOCITY }
     ));
 }
 

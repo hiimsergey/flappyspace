@@ -53,7 +53,6 @@ fn menu_setup(mut commands: Commands, assets: Res<AssetServer>) {
 	));
 }
 
-// TODO DOING
 fn menu_action(
 	mut commands: Commands,
 	mut query: Query<&mut Transform, (With<Text>, With<AnimateRotation>)>,
@@ -73,7 +72,7 @@ fn menu_action(
 		commands.spawn(
 			AudioBundle {
 				source: assets.load("sounds/start.wav"),
-				..default()
+				settings: PlaybackSettings::DESPAWN
 			}
 		);
 		game_state.set(GameState::Game);
