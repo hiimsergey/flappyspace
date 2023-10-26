@@ -44,7 +44,7 @@ impl Plugin for GamePlugin {
 	fn build(&self, app: &mut App) {
 		app
 			.insert_resource(RockTimer(Timer::from_seconds(fastrand::u8(ROCK_SPAWN_RATE) as f32 * 0.25, TimerMode::Once)))
-			.add_systems(OnEnter(GameState::Game), spawn_rocks))
+			.add_systems(OnEnter(GameState::Game), spawn_rocks)
 			.add_systems(
 				Update,
 				(
