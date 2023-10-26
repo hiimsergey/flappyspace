@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use super::{
-	despawn_screen,
-	GameState
+	JUMP_VELOCITY,
+	GameState,
+	Ship,
+	despawn_screen
 };
 
 pub struct MenuPlugin;
@@ -10,9 +12,10 @@ pub struct MenuPlugin;
 #[derive(Component)]
 struct OnMenuScreen;
 
+// TODO move to lib.rs
 // Tag component for rotating text
 #[derive(Component)]
-struct AnimateRotation;
+pub struct AnimateRotation;
 
 impl Plugin for MenuPlugin {
 	fn build(&self, app: &mut App) {
@@ -24,38 +27,49 @@ impl Plugin for MenuPlugin {
 }
 
 fn menu_setup(mut commands: Commands, assets: Res<AssetServer>) {
-	let text_style = TextStyle {
-		font: assets.load("fonts/PixelifySans-SemiBold.ttf"),
-		font_size: 50.,
-		color: Color::WHITE
-	};
-	let text_alignment = TextAlignment::Center;
-
 	commands.spawn((
-		Text2dBundle {
-			text: Text::from_section("Flappy Space", TextStyle {
-				font_size: 100.,
-				..text_style.clone()
-			}).with_alignment(text_alignment),
-			transform: Transform::from_translation(200. * Vec3::Y),
-			..default()
-		},
+		text_from_str(&assets, "Flappy Space", Color::WHITE, TextSize::Large),
 		OnMenuScreen
 	));
 	commands.spawn((
-		Text2dBundle {
-			text: Text::from_section("Press Space to start", text_style)
-				.with_alignment(text_alignment),
-			transform: Transform::from_translation(-200. * Vec3::Y),
-			..default()
-		},
+		text_from_str(&assets, "Press Enter to start", Color::WHITE, TextSize::Normal),
 		OnMenuScreen, AnimateRotation
 	));
 }
 
-fn menu_action(
+// Move all util functions to lib.rs
+pub enum TextSize { Normal, Large }
+pub fn text_from_str(
+	assets: &Res<AssetServer>,
+	text: &str,
+	text_color: Color,
+	text_size: TextSize
+) -> Text2dBundle {
+	let text_style = TextStyle {
+		font: assets.load("fonts/PixelifySans-SemiBold.ttf"),
+		font_size: 50.,
+		color: text_color
+	};
+
+	let (text_style, text_y) = match text_size {
+		TextSize::Normal => (text_style.clone(), -200.),
+		TextSize::Large => {
+			(TextStyle { font_size: 100., ..text_style.clone() }, 200.)
+		}
+	};
+
+	Text2dBundle {
+		text: Text::from_section(text, text_style)
+			.with_alignment(TextAlignment::Center),
+		transform: Transform::from_xyz(0., text_y, 1.),
+		..default()
+	}
+}
+
+pub fn menu_action(
 	mut commands: Commands,
-	mut query: Query<&mut Transform, (With<Text>, With<AnimateRotation>)>,
+	mut query: Query<&mut Transform, With<AnimateRotation>>,
+    mut ship_query: Query<&mut Ship>,
 	mut game_state: ResMut<NextState<GameState>>,
 	assets: Res<AssetServer>,
 	key: Res<Input<KeyCode>>,
@@ -67,14 +81,18 @@ fn menu_action(
 	}
 	
 	// Check for user input to enter game
-	if key.just_pressed(KeyCode::Space) {
-		// Play sound :)
-		commands.spawn(
-			AudioBundle {
-				source: assets.load("sounds/start.wav"),
-				settings: PlaybackSettings::DESPAWN
-			}
-		);
+	if key.just_pressed(KeyCode::Return) {
+		play_sound(&mut commands, &assets, "start");
+        ship_query.single_mut().velocity = JUMP_VELOCITY;
 		game_state.set(GameState::Game);
 	}
+}
+
+pub fn play_sound(commands: &mut Commands, assets: &Res<AssetServer>, sound: &str) {
+	commands.spawn(
+		AudioBundle {
+			source: assets.load(format!("sounds/{sound}.wav")),
+			settings: PlaybackSettings::DESPAWN
+		}
+	);
 }

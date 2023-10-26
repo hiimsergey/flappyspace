@@ -6,10 +6,14 @@
     // if you succeed, write them here
 // write SOURCE.txt
 // rename the repo to flappyspace
+// write helper function "play sound" in main.rs
+// pedantic: own arguments AFTER system arguments
 // BONUS spin ship when jumping
 // BONUS spawn some random rocks (size, rotation, position (sprite)) in menu screen
 // BONUS get better (jump) sounds
 // BONUS write own sprites (with background)
+// BONUS exit app gracefully ??
+// BONUS add app icon ??
 // TODO END END
 // reconsider chosen numbers
     // consider if they need to be const
@@ -19,7 +23,7 @@ use bevy::prelude::*;
 use game::JUMP_VELOCITY;
 mod menu;
 mod game;
-// mod dead;
+mod dead;
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, States)]
 enum GameState {
@@ -46,7 +50,7 @@ fn main() {
             DefaultPlugins.set(ImagePlugin::default_nearest()),
             menu::MenuPlugin,
             game::GamePlugin,
-            // TODO dead::DeadPlugin
+            dead::DeadPlugin
         ))
 
         // Add black background
