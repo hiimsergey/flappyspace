@@ -112,6 +112,7 @@ fn spawn_one_rock(
 	assets: &Res<AssetServer>,
 	y_point: f32
 ) {
+	// Base case
 	if y_point > TOP_BOUND { return; }
 
 	let y_distance = fastrand::u8(ROCK_DISTANCE_RANGE) as f32;
