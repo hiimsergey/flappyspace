@@ -1,6 +1,4 @@
-<center><img src="assets/sprites/rock1.png"/></center>
-
-# Flappyspace
+# Flappyspace <img src="assets/sprites/rock1.png"/>
 A lil' 2D game about a UFO and asteroids inspired by Flappy Bird.
 Written with [Bevy](https://bevyengine.org) in [Rust](https://rust-lang.org).
 
