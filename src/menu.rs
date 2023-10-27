@@ -69,12 +69,14 @@ pub fn text_from_str(
 pub fn menu_action(
 	mut commands: Commands,
 	mut query: Query<&mut Transform, With<AnimateRotation>>,
-    mut ship_query: Query<&mut Ship>,
+    mut ship_query: Query<(&mut TextureAtlasSprite, &mut Ship)>,
 	mut game_state: ResMut<NextState<GameState>>,
 	assets: Res<AssetServer>,
 	key: Res<Input<KeyCode>>,
 	time: Res<Time>,
 ) {	
+	let (mut sprite, mut ship) = ship_query.single_mut();
+	
 	// Rotate bottom text
 	for mut transform in &mut query {
 		transform.rotation = Quat::from_rotation_z(time.elapsed_seconds().cos()) / 2.;
@@ -83,7 +85,8 @@ pub fn menu_action(
 	// Check for user input to enter game
 	if key.just_pressed(KeyCode::Return) {
 		play_sound(&mut commands, &assets, "start");
-        ship_query.single_mut().velocity = JUMP_VELOCITY;
+		sprite.index = 1;
+        ship.velocity = JUMP_VELOCITY;
 		game_state.set(GameState::Game);
 	}
 }
@@ -91,7 +94,7 @@ pub fn menu_action(
 pub fn play_sound(commands: &mut Commands, assets: &Res<AssetServer>, sound: &str) {
 	commands.spawn(
 		AudioBundle {
-			source: assets.load(format!("sounds/{sound}.wav")),
+			source: assets.load(format!("sounds/{sound}.ogg")),
 			settings: PlaybackSettings::DESPAWN
 		}
 	);

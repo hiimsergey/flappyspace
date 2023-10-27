@@ -7,8 +7,7 @@
 use super::{
 	GameState,
 	Rock,
-	Ship,
-	despawn_screen
+	Ship
 };
 use std::ops::Range;
 use bevy::{
@@ -82,11 +81,18 @@ fn spawn_rocks(
 	// integrate this call into spawn_one_rock
 	// rethink entire algorithm, make it recursive
 	commands.spawn((
-		rock_from_y(BOTTOM_BOUND + fastrand::u8(0..100) as f32, &assets),
+		rock_from_y(
+			&assets,
+			BOTTOM_BOUND + fastrand::u8(0..100) as f32
+		),
 		// TODO MAYBE put this in a constant or create a default impl
 		Rock { velocity: ROCK_VELOCITY }, BottomRock
 	));
-	spawn_one_rock(BOTTOM_BOUND, commands, assets);
+	spawn_one_rock(
+		&mut commands,
+		&assets,
+		BOTTOM_BOUND
+	);
 }
 
 fn spawn_scoreboard(
@@ -94,7 +100,7 @@ fn spawn_scoreboard(
 	assets: Res<AssetServer>
 ) {
 	commands.spawn((
-		menu::text_from_str(&assets, "-2", Color::WHITE, menu::TextSize::Large),
+		menu::text_from_str(&assets, "-2", Color::BLACK, menu::TextSize::Large),
 		Scoreboard { score: -2 }
 	));
 }
@@ -102,28 +108,38 @@ fn spawn_scoreboard(
 // Helper function to recursively spawn multiple rocks in a column with
 // variable distances and radii
 fn spawn_one_rock(
-	y_point: f32,
-	mut commands: Commands,
-	assets: Res<AssetServer>
+	mut commands: &mut Commands,
+	assets: &Res<AssetServer>,
+	y_point: f32
 ) {
 	if y_point > TOP_BOUND { return; }
 
 	let y_distance = fastrand::u8(ROCK_DISTANCE_RANGE) as f32;
 
 	commands.spawn((
-		rock_from_y(y_point + y_distance, &assets),
+		rock_from_y(
+			&assets,
+			y_point + y_distance
+		),
 		// TODO rock.velocity
 		Rock { velocity: ROCK_VELOCITY }
 	));
 
 	// Recursive call to spawn another rock
-	spawn_one_rock(y_point + y_distance, commands, assets);
+	spawn_one_rock(
+		&mut commands,
+		&assets,
+		y_point + y_distance
+	);
 }
 
 // Helper function because I'm lazy
-fn rock_from_y(y: f32, assets: &Res<AssetServer>) -> SpriteBundle {
+fn rock_from_y(
+	assets: &Res<AssetServer>,
+	y: f32
+) -> SpriteBundle {
 	SpriteBundle {
-		texture: assets.load("sprites/rock.png"),
+		texture: assets.load(format!("sprites/rock{}.png", fastrand::u8(1..=4))),
 		transform: Transform::from_xyz(fastrand::u16(ROCK_SPAWN_RANGE) as f32, y, fastrand::f32())
 			.with_scale(Vec3::splat(fastrand::u8(ROCK_SIZE_RANGE) as f32))
 			// TODO TEST
@@ -134,12 +150,22 @@ fn rock_from_y(y: f32, assets: &Res<AssetServer>) -> SpriteBundle {
 
 fn periodic_rock_waves(
 	mut commands: Commands,
-	mut timer: ResMut<RockTimer>,
 	mut query: Query<&mut Scoreboard>,
 	mut text_query: Query<&mut Text, With<Scoreboard>>,
+	mut timer: ResMut<RockTimer>,
 	assets: Res<AssetServer>,
 	time: Res<Time>
 ) {
+	if query.single_mut().score == 0 {
+		// rewriting textstyle
+		// this is kinda sloppy, so mind this
+		text_query.single_mut().sections[0].style = TextStyle {
+			font: assets.load("fonts/PixelifySans-SemiBold.ttf"),
+			font_size: 100.,
+			color: Color::WHITE
+		};
+	}
+
 	if timer.tick(time.delta()).finished() {
 		commands.insert_resource(RockTimer(Timer::from_seconds(
 			fastrand::u8(ROCK_SPAWN_RATE) as f32 * 0.25,
@@ -204,12 +230,12 @@ fn update_ship(
 
 fn check_collisions(
 	mut commands: Commands,
-	mut ship_query: Query<&Transform, With<Ship>>,
+	mut ship_query: Query<(&mut TextureAtlasSprite, &Transform), With<Ship>>,
 	mut game_state: ResMut<NextState<GameState>>,
 	assets: Res<AssetServer>,
 	rock_query: Query<&Transform, With<Rock>>
 ) {
-	let ship_transform = ship_query.single_mut();
+	let (mut sprite, ship_transform) = ship_query.single_mut();
 
 	for transform in &rock_query {
 		if collide(
@@ -219,9 +245,15 @@ fn check_collisions(
 			transform.scale.truncate() * 11.5,
 			// position of ship
 			ship_transform.translation,
-			// size of ship (scale * height/width of sprite in pixels -0.5)
-			ship_transform.scale.truncate() * 19.5
+			// size of ship
+			Vec2::new(
+				// scale * (width in pixels - 0.5)
+				transform.scale.truncate().x * 11.5,
+				// scale * (height in pixels - 0.5)
+				transform.scale.truncate().y * 9.5
+			)
 		).is_some() {
+			sprite.index = 0;
 			menu::play_sound(&mut commands, &assets, "crash");
 			game_state.set(GameState::Dead);
 		}

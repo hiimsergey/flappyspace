@@ -1,21 +1,18 @@
 // TODO
-// predetermine window size
-    // make bound dependent on them (see game.rs) 
-// find a way to disable docs
-    // if you succeed, write them here
-// write SOURCE.txt
-// rename the repo to flappyspace
+// write docs
 // pedantic: own arguments AFTER system arguments
-// BONUS get better (jump) sounds
-// BONUS write own sprites (with background)
 // BONUS exit app gracefully ??
 // BONUS add app icon ??
+// BONUS explosions ??
 // TODO END END
 // reconsider chosen numbers
     // consider if they need to be const
     // consider making some numbers const too
 // check and rewrite comments
 // remove unnecessary fonts, sprites and sfx
+// predetermine window size
+    // make bound dependent on them (see game.rs) 
+// explain the "unclear" crashes in gameplay
 use bevy::prelude::*;
 use game::JUMP_VELOCITY;
 mod menu;
@@ -40,6 +37,9 @@ struct Rock {
     velocity: f32
 }
 
+#[derive(Component, Deref, DerefMut)]
+struct AnimationTimer(Timer);
+
 fn main() {
     App::new()
         .add_plugins((
@@ -58,24 +58,53 @@ fn main() {
         
         // Per-frame logic
         .add_systems(Startup, setup)
+        .add_systems(Update, animate_ship)
         .run();
 }
 
-fn setup(mut commands: Commands, assets: Res<AssetServer>) {
-    // TODO PLUS make it spin around
-        // move up and down
-        // rotate a bit
+// TODO NOW animate
+fn setup(
+    mut commands: Commands,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    assets: Res<AssetServer>
+) {
+    let texture_atlas = TextureAtlas::from_grid(
+        assets.load("sprites/ship.png"),
+        Vec2::new(12., 10.),
+        6, 1, None, None
+    );
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
     commands.spawn(Camera2dBundle::default());
     commands.spawn((
-        SpriteBundle {
-            texture: assets.load("sprites/ship.png"),
-            // TODO refine these coords
+        SpriteSheetBundle {
+            texture_atlas: texture_atlas_handle,
+            sprite: TextureAtlasSprite::new(1),
             transform: Transform::from_xyz(0., 0., 1.)
                 .with_scale(Vec3::splat(3.)),
             ..default()
         },
+        AnimationTimer(Timer::from_seconds(0.4, TimerMode::Repeating)),
         Ship { velocity: JUMP_VELOCITY }
     ));
+}
+
+fn animate_ship(
+    mut query: Query<(&mut AnimationTimer, &mut TextureAtlasSprite)>,
+    time: Res<Time>
+) {
+    for (mut timer, mut sprite) in &mut query {
+        if timer.tick(time.delta()).just_finished() {
+            match sprite.index {
+                // If on last sprite, go back to first
+                5 => sprite.index = 1,
+                // If set to 0 (ship broken), don't animate anymore
+                0 => {},
+                // Otherwise just increment
+                _ => sprite.index += 1
+            }
+        }
+    }
 }
 
 // Helper function to despawn all entities of a certain component
