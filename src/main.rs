@@ -1,15 +1,11 @@
 // TODO
-// remove unnecessary fonts, sprites and sfx
 // predetermine window size
     // make bound dependent on them (see game.rs) 
 // find a way to disable docs
     // if you succeed, write them here
 // write SOURCE.txt
 // rename the repo to flappyspace
-// write helper function "play sound" in main.rs
 // pedantic: own arguments AFTER system arguments
-// BONUS spin ship when jumping
-// BONUS spawn some random rocks (size, rotation, position (sprite)) in menu screen
 // BONUS get better (jump) sounds
 // BONUS write own sprites (with background)
 // BONUS exit app gracefully ??
@@ -19,6 +15,7 @@
     // consider if they need to be const
     // consider making some numbers const too
 // check and rewrite comments
+// remove unnecessary fonts, sprites and sfx
 use bevy::prelude::*;
 use game::JUMP_VELOCITY;
 mod menu;

@@ -7,7 +7,8 @@
 use super::{
 	GameState,
 	Rock,
-	Ship
+	Ship,
+	despawn_screen
 };
 use std::ops::Range;
 use bevy::{
@@ -36,6 +37,12 @@ pub struct GamePlugin;
 #[derive(Component)]
 struct BottomRock;
 
+// TODO make to resource
+#[derive(Component)]
+pub struct Scoreboard {
+	score: i32
+}
+
 // Timer resource for periodically spawning rocks
 #[derive(Resource, Deref, DerefMut)]
 struct RockTimer(Timer);
@@ -44,10 +51,9 @@ impl Plugin for GamePlugin {
 	fn build(&self, app: &mut App) {
 		app
 			.insert_resource(RockTimer(Timer::from_seconds(fastrand::u8(ROCK_SPAWN_RATE) as f32 * 0.25, TimerMode::Once)))
-			.add_systems(OnEnter(GameState::Game), spawn_rocks)
+			.add_systems(OnEnter(GameState::Game), (spawn_rocks, spawn_scoreboard))
 			.add_systems(
-				Update,
-				(
+				Update, (
 					periodic_rock_waves,
 					move_rocks,
 					update_ship,
@@ -57,9 +63,8 @@ impl Plugin for GamePlugin {
 					// TODO MAYBE
 					// scoreboard_system
 					// rotate_rocks
-				)
-					.chain()
-					.run_if(in_state(GameState::Game))
+				).chain()
+				.run_if(in_state(GameState::Game))
 			);
 	}
 }
@@ -82,6 +87,16 @@ fn spawn_rocks(
 		Rock { velocity: ROCK_VELOCITY }, BottomRock
 	));
 	spawn_one_rock(BOTTOM_BOUND, commands, assets);
+}
+
+fn spawn_scoreboard(
+	mut commands: Commands,
+	assets: Res<AssetServer>
+) {
+	commands.spawn((
+		menu::text_from_str(&assets, "-2", Color::WHITE, menu::TextSize::Large),
+		Scoreboard { score: -2 }
+	));
 }
 
 // Helper function to recursively spawn multiple rocks in a column with
@@ -120,6 +135,8 @@ fn rock_from_y(y: f32, assets: &Res<AssetServer>) -> SpriteBundle {
 fn periodic_rock_waves(
 	mut commands: Commands,
 	mut timer: ResMut<RockTimer>,
+	mut query: Query<&mut Scoreboard>,
+	mut text_query: Query<&mut Text, With<Scoreboard>>,
 	assets: Res<AssetServer>,
 	time: Res<Time>
 ) {
@@ -128,6 +145,11 @@ fn periodic_rock_waves(
 			fastrand::u8(ROCK_SPAWN_RATE) as f32 * 0.25,
 			TimerMode::Once
 		)));
+
+		// Increment score
+		query.single_mut().score += 1;
+		text_query.single_mut().sections[0].value = query.single().score.to_string();
+
 		spawn_rocks(commands, assets);
 	}
 }
@@ -135,7 +157,6 @@ fn periodic_rock_waves(
 fn move_rocks(
 	mut commands: Commands,
 	mut query: Query<(Entity, &mut Transform, &mut Rock)>,
-	assets: Res<AssetServer>,
 	time: Res<Time>
 ) {
 	for (rock_entity, mut transform, rock) in query.iter_mut() {

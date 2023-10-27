@@ -10,6 +10,7 @@ use bevy::prelude::*;
 use super::{
 	GameState,
     Rock,
+	game::Scoreboard,
 	despawn_screen
 };
 use crate::menu;
@@ -29,7 +30,8 @@ impl Plugin for DeadPlugin {
 			)
 			.add_systems(OnExit(GameState::Dead), (
                 despawn_screen::<Rock>,
-                despawn_screen::<OnDeadScreen>
+                despawn_screen::<OnDeadScreen>,
+				despawn_screen::<Scoreboard>
             ));
 	}
 }
