@@ -1,4 +1,4 @@
-<img src="assets/icon.png"/>
+<img src="assets/icon.png" width=20%/>
 
 # Flappyspace
 A lil' 2D game about a UFO and asteroids inspired by Flappy Bird.
