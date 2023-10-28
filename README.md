@@ -11,3 +11,4 @@ Press the spacebar to jump. Dodge the asteroids. That's it. Yippie.
 - font: [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans)
 - sprites: my own (feel free to use them)
   - inspired by ["ASTEROID" by greenretroman](http://greenretroman.itch.io/asteroids)
+- sounds: [Sci-Fi Sounds](https://kenney.nl/assets/sci-fi-sounds) and [Interface Sounds](https://kenney.nl/assets/interface-sounds) by [Kenney.nl](https://kenney.nl)
