@@ -1,6 +1,6 @@
 <img src="assets/icon.png" width=20%/>
 
-# Flappyspace
+# Flappy Space
 A lil' 2D game about a UFO and asteroids inspired by Flappy Bird.
 Written with [Bevy](https://bevyengine.org) in [Rust](https://rust-lang.org).
 
