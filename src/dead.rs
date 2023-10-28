@@ -11,7 +11,7 @@ use super::{
 	GameState,
     Rock,
 	game::Scoreboard,
-	despawn_screen
+	cleanup
 };
 use crate::menu;
 
@@ -29,9 +29,9 @@ impl Plugin for DeadPlugin {
                 Update, menu::menu_action.run_if(in_state(GameState::Dead))
 			)
 			.add_systems(OnExit(GameState::Dead), (
-                despawn_screen::<Rock>,
-                despawn_screen::<OnDeadScreen>,
-				despawn_screen::<Scoreboard>
+                cleanup::<Rock>,
+				cleanup::<Scoreboard>,
+                cleanup::<OnDeadScreen>
             ));
 	}
 }
@@ -41,11 +41,15 @@ fn game_over(
     assets: Res<AssetServer>
 ) {
     commands.spawn((
-        menu::text_from_str(&assets, "Game Over", Color::RED, menu::TextSize::Large),
+        menu::text_from_str(&assets, "Game Over", Color::RED, menu::TextSize::GameOver),
         OnDeadScreen
     ));
     commands.spawn((
-        menu::text_from_str(&assets, "Press Enter to restart", Color::RED, menu::TextSize::Normal),
+        menu::text_from_str(&assets, "Press Enter to restart", Color::RED, menu::TextSize::Low),
+        OnDeadScreen, menu::AnimateRotation
+    ));
+    commands.spawn((
+        menu::text_from_str(&assets, "Press A for About", Color::RED, menu::TextSize::Lower),
         OnDeadScreen, menu::AnimateRotation
     ));
 }

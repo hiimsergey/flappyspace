@@ -1,14 +1,18 @@
 [package]
 name = "flappyspace"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2021"
 
 [dependencies]
 fastrand = "2.0.1"
+image = "0.24.7"
+winit = "0.28.7"
 
 [dependencies.bevy]
 version = "0.11.3"
 features = ["dynamic_linking"]
+# Add this if you use Wayland, else it won't compile
+# features = ["wayland"]
 
 # Enable a small amount of optimisation in debug mode
 [profile.dev]

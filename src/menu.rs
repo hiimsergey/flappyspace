@@ -3,7 +3,7 @@ use super::{
 	JUMP_VELOCITY,
 	GameState,
 	Ship,
-	despawn_screen
+	cleanup
 };
 
 pub struct MenuPlugin;
@@ -20,9 +20,11 @@ pub struct AnimateRotation;
 impl Plugin for MenuPlugin {
 	fn build(&self, app: &mut App) {
 		app
-			.add_systems(OnEnter(GameState::Menu), menu_setup)
-			.add_systems(Update, menu_action.run_if(in_state(GameState::Menu)))
-			.add_systems(OnExit(GameState::Menu), despawn_screen::<OnMenuScreen>);
+			.add_systems(OnEnter(GameState::Menu), (menu_setup, crate::spawn_ship))
+			.add_systems(Update, (crate::animate_ship, menu_action).run_if(in_state(GameState::Menu)))
+			// TODO move to main.rs
+			.add_systems(FixedUpdate, rotate_text)
+			.add_systems(OnExit(GameState::Menu), cleanup::<OnMenuScreen>);
 	}
 }
 
@@ -32,13 +34,17 @@ fn menu_setup(mut commands: Commands, assets: Res<AssetServer>) {
 		OnMenuScreen
 	));
 	commands.spawn((
-		text_from_str(&assets, "Press Enter to start", Color::WHITE, TextSize::Normal),
+		text_from_str(&assets, "Press Enter to start", Color::WHITE, TextSize::Low),
+		OnMenuScreen, AnimateRotation
+	));
+	commands.spawn((
+		text_from_str(&assets, "Press A for About", Color::WHITE, TextSize::Lower),
 		OnMenuScreen, AnimateRotation
 	));
 }
 
 // Move all util functions to lib.rs
-pub enum TextSize { Normal, Large }
+pub enum TextSize { Large, Low, Lower, GameOver, Normal }
 pub fn text_from_str(
 	assets: &Res<AssetServer>,
 	text: &str,
@@ -52,9 +58,17 @@ pub fn text_from_str(
 	};
 
 	let (text_style, text_y) = match text_size {
-		TextSize::Normal => (text_style.clone(), -200.),
 		TextSize::Large => {
 			(TextStyle { font_size: 100., ..text_style.clone() }, 200.)
+		},
+		TextSize::Low => (text_style.clone(), -170.),
+		// TODO TEMP
+		TextSize::Lower => (text_style.clone(), -270.),
+		TextSize::Normal => {
+			(TextStyle { font_size: 30., ..text_style.clone() }, 0.)
+		},
+		TextSize::GameOver => {
+			(TextStyle { font_size: 100., ..text_style.clone() }, 0.)
 		}
 	};
 
@@ -66,21 +80,15 @@ pub fn text_from_str(
 	}
 }
 
+// Also works as Update system for Game Over
 pub fn menu_action(
 	mut commands: Commands,
-	mut query: Query<&mut Transform, With<AnimateRotation>>,
     mut ship_query: Query<(&mut TextureAtlasSprite, &mut Ship)>,
 	mut game_state: ResMut<NextState<GameState>>,
 	assets: Res<AssetServer>,
 	key: Res<Input<KeyCode>>,
-	time: Res<Time>,
 ) {	
 	let (mut sprite, mut ship) = ship_query.single_mut();
-	
-	// Rotate bottom text
-	for mut transform in &mut query {
-		transform.rotation = Quat::from_rotation_z(time.elapsed_seconds().cos()) / 2.;
-	}
 	
 	// Check for user input to enter game
 	if key.just_pressed(KeyCode::Return) {
@@ -88,6 +96,18 @@ pub fn menu_action(
 		sprite.index = 1;
         ship.velocity = JUMP_VELOCITY;
 		game_state.set(GameState::Game);
+	}
+	if key.just_pressed(KeyCode::A) {
+		game_state.set(GameState::About);
+	}
+}
+
+pub fn rotate_text(
+	mut query: Query<&mut Transform, With<AnimateRotation>>,
+	time: Res<Time>
+) {
+	for mut transform in &mut query {
+		transform.rotation = Quat::from_rotation_z(time.elapsed_seconds().cos()) / 2.;
 	}
 }
 

@@ -22,29 +22,24 @@ use crate::menu;
 pub const JUMP_VELOCITY: f32 = 500.;
 const GRAVITY: f32 = 40.;
 const ROCK_VELOCITY: f32 = 200.;
-const TOP_BOUND: f32 = 425.;
+pub const TOP_BOUND: f32 = 425.;
 const BOTTOM_BOUND: f32 = -TOP_BOUND;
 const ROCK_DESPAWN_X: f32 = -500.;
 const ROCK_SPAWN_RANGE: Range<u16> = -ROCK_DESPAWN_X as u16..(-ROCK_DESPAWN_X + 150.) as u16;
-const ROCK_SPAWN_RATE: Range<u8> = 4..6;
+const ROCK_SPAWN_RATE: Range<u8> = 3..5;
 const ROCK_SIZE_RANGE: Range<u8> = 2..6;
 const ROCK_DISTANCE_RANGE: Range<u8> = 128..255;
 
 pub struct GamePlugin;
 
-// Tag component marking the lowest Rock in a column
-#[derive(Component)]
-struct BottomRock;
+// Timer resource for periodically spawning rocks
+#[derive(Resource, Deref, DerefMut)]
+struct RockTimer(Timer);
 
-// TODO make to resource
 #[derive(Component)]
 pub struct Scoreboard {
 	score: i32
 }
-
-// Timer resource for periodically spawning rocks
-#[derive(Resource, Deref, DerefMut)]
-struct RockTimer(Timer);
 
 impl Plugin for GamePlugin {
 	fn build(&self, app: &mut App) {
@@ -53,17 +48,14 @@ impl Plugin for GamePlugin {
 			.add_systems(OnEnter(GameState::Game), (spawn_rocks, spawn_scoreboard))
 			.add_systems(
 				Update, (
-					periodic_rock_waves,
+					crate::animate_ship,
+					periodic_rocks_and_score,
 					move_rocks,
 					update_ship,
 					check_collisions
-					// TODO RM
-					// check_collisions
 					// TODO MAYBE
-					// scoreboard_system
 					// rotate_rocks
-				).chain()
-				.run_if(in_state(GameState::Game))
+				).chain().run_if(in_state(GameState::Game))
 			);
 	}
 }
@@ -86,7 +78,7 @@ fn spawn_rocks(
 			BOTTOM_BOUND + fastrand::u8(0..100) as f32
 		),
 		// TODO MAYBE put this in a constant or create a default impl
-		Rock { velocity: ROCK_VELOCITY }, BottomRock
+		Rock { velocity: ROCK_VELOCITY }
 	));
 	spawn_one_rock(
 		&mut commands,
@@ -112,7 +104,6 @@ fn spawn_one_rock(
 	assets: &Res<AssetServer>,
 	y_point: f32
 ) {
-	// Base case
 	if y_point > TOP_BOUND { return; }
 
 	let y_distance = fastrand::u8(ROCK_DISTANCE_RANGE) as f32;
@@ -149,15 +140,15 @@ fn rock_from_y(
 	}
 }
 
-fn periodic_rock_waves(
+fn periodic_rocks_and_score(
 	mut commands: Commands,
-	mut query: Query<&mut Scoreboard>,
+	mut score_query: Query<&mut Scoreboard>,
 	mut text_query: Query<&mut Text, With<Scoreboard>>,
 	mut timer: ResMut<RockTimer>,
 	assets: Res<AssetServer>,
 	time: Res<Time>
 ) {
-	if query.single_mut().score == 0 {
+	if score_query.single_mut().score == 0 {
 		// rewriting textstyle
 		// this is kinda sloppy, so mind this
 		text_query.single_mut().sections[0].style = TextStyle {
@@ -174,8 +165,8 @@ fn periodic_rock_waves(
 		)));
 
 		// Increment score
-		query.single_mut().score += 1;
-		text_query.single_mut().sections[0].value = query.single().score.to_string();
+		score_query.single_mut().score += 1;
+		text_query.single_mut().sections[0].value = score_query.single().score.to_string();
 
 		spawn_rocks(commands, assets);
 	}
@@ -248,10 +239,10 @@ fn check_collisions(
 			ship_transform.translation,
 			// size of ship
 			Vec2::new(
-				// scale * (width in pixels - 0.5)
-				transform.scale.truncate().x * 11.5,
 				// scale * (height in pixels - 0.5)
-				transform.scale.truncate().y * 9.5
+				transform.scale.truncate().x * 9.5,
+				// scale * (width in pixels - 0.5)
+				transform.scale.truncate().y * 11.5
 			)
 		).is_some() {
 			sprite.index = 0;

@@ -1,28 +1,26 @@
 // TODO
-// write docs
+// check and rewrite comments
+// write docs (relearn)
 // pedantic: own arguments AFTER system arguments
-// BONUS exit app gracefully ??
-// BONUS add app icon ??
-// BONUS explosions ??
-// TODO END END
 // reconsider chosen numbers
     // consider if they need to be const
     // consider making some numbers const too
-// check and rewrite comments
-// remove unnecessary fonts, sprites and sfx
-// predetermine window size
-    // make bound dependent on them (see game.rs) 
-// explain the "unclear" crashes in gameplay
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    window::{PrimaryWindow, WindowResolution},
+    winit::WinitWindows
+};
+use winit::window::Icon;
 use game::JUMP_VELOCITY;
-mod menu;
-mod game;
-mod dead;
+use game::TOP_BOUND;
+
+mod menu; mod about; mod game; mod dead;
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, States)]
 enum GameState {
     #[default]
     Menu,
+    About,
     Game,
     Dead
 }
@@ -32,6 +30,7 @@ struct Ship {
     velocity: f32
 }
 
+// Common component for rocks and scoreboard
 #[derive(Component)]
 struct Rock {
     velocity: f32
@@ -44,26 +43,37 @@ fn main() {
     App::new()
         .add_plugins((
             // Set 'Pixel Perfect' to prevent bluriness of PNGs
-            DefaultPlugins.set(ImagePlugin::default_nearest()),
+            DefaultPlugins
+                .set(ImagePlugin::default_nearest())
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        present_mode: bevy::window::PresentMode::AutoVsync,
+                        mode: bevy::window::WindowMode::Windowed,
+                        title: "Flappy Space".to_string(),
+                        resizable: false,
+                        resolution: WindowResolution::new(
+                            2.1 * TOP_BOUND,
+                            2.1 * TOP_BOUND
+                        ),
+                        ..default()
+                    }),
+                    ..default()
+                }),
             menu::MenuPlugin,
+            about::AboutPlugin,
             game::GamePlugin,
             dead::DeadPlugin
         ))
-
         // Add black background
         .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
-
         // Declare game state, set to default (Menu)
         .add_state::<GameState>()
-        
-        // Per-frame logic
         .add_systems(Startup, setup)
-        .add_systems(Update, animate_ship)
         .run();
 }
 
 // TODO NOW animate
-fn setup(
+pub fn spawn_ship(
     mut commands: Commands,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     assets: Res<AssetServer>
@@ -75,7 +85,6 @@ fn setup(
     );
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
-    commands.spawn(Camera2dBundle::default());
     commands.spawn((
         SpriteSheetBundle {
             texture_atlas: texture_atlas_handle,
@@ -89,6 +98,31 @@ fn setup(
     ));
 }
 
+fn setup(
+    mut commands: Commands,
+    main_window: Query<Entity, With<PrimaryWindow>>,
+    windows: NonSend<WinitWindows>,
+) {
+    commands.spawn(Camera2dBundle::default());
+
+    // Add window icon
+    // As of now, Bevy does not provide a proper API for setting the window icon.
+    // StackOverflow, my beloved: <https://stackoverflow.com/a/76729516>
+    let Some(primary) = windows.get_window(main_window.single()) else { return };
+
+    let (icon_rgba, icon_width, icon_height) = {
+        let image = image::open("assets/icon.png")
+            .expect("Failed to open icon path")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        (rgba, width, height)
+    };
+
+    let icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
+    primary.set_window_icon(Some(icon));
+}
+
 fn animate_ship(
     mut query: Query<(&mut AnimationTimer, &mut TextureAtlasSprite)>,
     time: Res<Time>
@@ -96,11 +130,7 @@ fn animate_ship(
     for (mut timer, mut sprite) in &mut query {
         if timer.tick(time.delta()).just_finished() {
             match sprite.index {
-                // If on last sprite, go back to first
                 5 => sprite.index = 1,
-                // If set to 0 (ship broken), don't animate anymore
-                0 => {},
-                // Otherwise just increment
                 _ => sprite.index += 1
             }
         }
@@ -108,7 +138,7 @@ fn animate_ship(
 }
 
 // Helper function to despawn all entities of a certain component
-fn despawn_screen<T: Component>(mut commands: Commands, query: Query<Entity, With<T>>) {
+fn cleanup<T: Component>(mut commands: Commands, query: Query<Entity, With<T>>) {
     for entity in &query {
         commands.entity(entity).despawn_recursive();
     }
