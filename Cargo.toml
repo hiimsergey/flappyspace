@@ -1,16 +1,18 @@
 [package]
 name = "flappyspace"
-version = "0.0.3"
+version = "1.0.0"
 edition = "2021"
 
 [dependencies]
+bevy_embedded_assets = "0.8.0"
 fastrand = "2.0.1"
 image = "0.24.7"
 winit = "0.28.7"
 
 [dependencies.bevy]
 version = "0.11.3"
-features = ["dynamic_linking"]
+# Only uncomment this for debug compilations
+# features = ["dynamic_linking"]
 # Add this if you use Wayland, else it won't compile
 # features = ["wayland"]
 
