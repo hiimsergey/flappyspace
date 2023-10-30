@@ -37,13 +37,7 @@ fn spawn_about_text(mut commands: Commands, assets: Res<AssetServer>) {
     commands.spawn((
         text_from_str(
             &assets,
-"Flappy Space
-<https://github.com/hiimsergey/flappyspace>
-
-Built with Bevy Engine
-<https://bevyengine.org>
-
-GPL-3.0 License",
+            ABOUT_TEXT,
             ABOUT_TEXT_FONT_SIZE,
             ABOUT_TEXT_COLOR,
             0.
