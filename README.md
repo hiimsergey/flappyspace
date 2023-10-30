@@ -19,7 +19,9 @@ cargo run --release
 ```
 
 I used the [bevy_embedded_assets](https://github.com/vleue/bevy_embedded_assets) plugin so that you don't need to download the assets folder alongside the executable.
-However you would need to download the icon because I implemented it through winit and not Bevy, since there is no official implementation for that yet. But I think it's not too tragic.
+However, if you want a window icon, you would need to download it. I implemented it through winit and not Bevy, since there is no official implementation for that yet.
+
+If the program doesn't find an icon, it simply runs without it. But I think it's not too tragic.
 
 ## Assets
 - font: [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans)
