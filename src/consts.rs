@@ -44,18 +44,18 @@ pub const HEADING_FONT_SIZE: f32 = 100.;
 /// Y-coordinate of heading text
 pub const HEADING_Y: f32 = 200.;
 
-/// Font size of input hints ("Press <key> to <action>")
+/// Font size of input hints ("Press \<key\> to \<action\>")
 pub const INPUT_HINT_FONT_SIZE: f32 = 50.;
 
-/// Y-coordinate of input hint ("Press <key> to <action>"), if there is one
+/// Y-coordinate of input hint ("Press \<key\> to \<action\>"), if there is one
 /// input hint
 pub const INPUT_HINT_ONE_Y: f32 = -220.;
 
-/// Y-coordinate of upper input hint ("Press <key> to <action>"), if there are
+/// Y-coordinate of upper input hint ("Press \<key\> to \<action\>"), if there are
 /// multiple input hints
 pub const INPUT_HINT_UPPER_Y: f32 = -170.;
 
-/// Y-coordinate of lower input hint ("Press <key> to <action>"), if there are
+/// Y-coordinate of lower input hint ("Press \<key\> to \<action\>"), if there are
 /// multiple input hints
 pub const INPUT_HINT_LOWER_Y: f32 = -270.;
 
