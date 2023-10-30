@@ -61,6 +61,15 @@ pub const INPUT_HINT_LOWER_Y: f32 = -270.;
 
 
 
+/// Text you're going to see in About screen
+pub const ABOUT_TEXT: &str = "Flappy Space
+<https://github.com/hiimsergey/flappyspace>
+
+Built with Bevy Engine
+<https://bevyengine.org>
+
+GPL-3.0 License";
+
 /// Font size of content in About screen
 pub const ABOUT_TEXT_FONT_SIZE: f32 = 30.;
 

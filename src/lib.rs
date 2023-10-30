@@ -47,8 +47,6 @@ pub struct Scoreboard {
 pub struct ShipAnimationTimer(pub Timer);
 
 /// Timer resource for periodic rock spawn waves
-///
-/// See also: [`crate::game::periodic_waves`]
 #[derive(Resource, Deref, DerefMut)]
 pub struct RockTimer(pub Timer);
 
