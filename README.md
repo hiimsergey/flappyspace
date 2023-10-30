@@ -8,6 +8,16 @@ Written with [Bevy](https://bevyengine.org) in [Rust](https://rust-lang.org).
 Press the spacebar to jump. Dodge the asteroids. That's it. Yippie.
 
 ## Setup
+Under **Releases**, you can download the binary. As of now, there is only Linux.
+
+If you have `cargo` installed, you can compile the game from source:
+
+```
+git clone https://github.com/hiimsergey/flappyspace
+cd flappyspace
+cargo run --release
+```
+
 I used the [bevy_embedded_assets](https://github.com/vleue/bevy_embedded_assets) plugin so that you don't need to download the assets folder alongside the executable.
 However you would need to download the icon because I implemented it through winit and not Bevy, since there is no official implementation for that yet. But I think it's not too tragic.
 
