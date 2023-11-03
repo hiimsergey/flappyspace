@@ -8,10 +8,10 @@ pub const TOP_BOUND: f32 = 425.;
 pub const BOTTOM_BOUND: f32 = -TOP_BOUND;
 
 /// Number that the ship's velocity is being decreased by every frame
-pub const GRAVITY: f32 = 40.;
+pub const GRAVITY: f32 = 35.;
 
 /// Number that the ship's velocity gets set to after a jump
-pub const JUMP_VELOCITY: f32 = 500.;
+pub const JUMP_VELOCITY: f32 = 450.;
 
 
 

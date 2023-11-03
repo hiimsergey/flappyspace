@@ -1,6 +1,6 @@
 [package]
 name = "flappyspace"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 description = "A small game about a little UFO dodging asteroids built in Bevy"
 readme = "README.md"

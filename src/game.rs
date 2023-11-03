@@ -127,8 +127,8 @@ fn update_ship(
         ship.velocity -= GRAVITY;
 
         // Rotates ship according to velocity
-        // The factor 0.0005 is chosen randomly but looks convenient
-        transform.rotation = Quat::from_rotation_z(0.0005 * ship.velocity);
+        // The factor 0.00075 is chosen randomly but looks convenient
+        transform.rotation = Quat::from_rotation_z(0.00075 * ship.velocity);
 
         // Checks for input (Space) and applies increased velocity
         if key.just_pressed(KeyCode::Space) {
@@ -153,6 +153,7 @@ fn update_ship(
 fn check_collisions(
     mut commands: Commands,
     mut ship_query: Query<(&mut TextureAtlasSprite, &Transform), With<Ship>>,
+    mut score_text_query: Query<&mut Text, With<Scoreboard>>,
     mut game_state: ResMut<NextState<GameState>>,
     assets: Res<AssetServer>,
     rock_query: Query<&Transform, With<Rock>>
@@ -178,6 +179,8 @@ fn check_collisions(
         ).is_some() {
             // Changes ship sprite to broken ship
             sprite.index = 0;
+            // Changes color of the scoreboard to make it more visible
+            score_text_query.single_mut().sections[0].style.color = Color::RED;
             play_sound(&mut commands, &assets, "crash");
             game_state.set(GameState::Crashed);
         }
