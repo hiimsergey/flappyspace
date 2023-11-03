@@ -42,6 +42,10 @@ pub struct Scoreboard {
     pub score: i32
 }
 
+/// Resource for storing the highscore
+#[derive(Resource)]
+pub struct Highscore(pub i32);
+
 /// Timer for animating the Ship sprite
 #[derive(Component, Deref, DerefMut)]
 pub struct ShipAnimationTimer(pub Timer);

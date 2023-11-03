@@ -4,7 +4,7 @@ use bevy::winit::WinitWindows;
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 use winit::window::Icon;
 
-use flappyspace::{TOP_BOUND, GameState};
+use flappyspace::{TOP_BOUND, GameState, Highscore};
 
 mod menu; mod about; mod game; mod crashed;
 
@@ -45,6 +45,9 @@ fn main() {
         // Adds black background
         .insert_resource(ClearColor(Color::BLACK))
 
+        // Adds highscore counter
+        .insert_resource(Highscore(0))
+
         // Declares game state, set to default (Menu)
         .add_state::<GameState>()
 
@@ -56,7 +59,9 @@ fn main() {
 
 /// First system to run
 /// 
-/// Spawns default 2D camera bundle and checks for window icon
+/// Spawns default 2D camera bundle and highscore counter
+///
+/// Checks for window icon
 fn setup(
     mut commands: Commands,
     main_window: Query<Entity, With<PrimaryWindow>>,
@@ -64,6 +69,9 @@ fn setup(
 ) {
     // Spawns default camera setup
     commands.spawn(Camera2dBundle::default());
+
+    // Spawns in-game-independent highscore counter
+    // TODO
 
     // Since Bevy doesn't provide a way to add a window icon yet, I use winit
     // to do so. Thus, bevy_embedded_assets doesn't include the icon in the

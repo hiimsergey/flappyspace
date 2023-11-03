@@ -11,7 +11,10 @@ struct OnCrashedScreen;
 impl Plugin for CrashedPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(OnEnter(GameState::Crashed), spawn_crashed_text)
+            .add_systems(
+                OnEnter(GameState::Crashed),
+                (spawn_crashed_text, spawn_highscore)
+            )
             .add_systems(
                 Update,
                 (lobby_input, rotate_text).run_if(in_state(GameState::Crashed))
@@ -52,5 +55,35 @@ fn spawn_crashed_text(mut commands: Commands, assets: Res<AssetServer>) {
             Color::RED,
             INPUT_HINT_LOWER_Y
         ), OnCrashedScreen, TextRotation
+    ));
+}
+
+/// Spawn text informing about the highscore: Either "New highscore" or "Highscore: xy"
+fn spawn_highscore(
+    mut commands: Commands,
+    mut highscore_query: ResMut<Highscore>,
+    assets: Res<AssetServer>,
+    score_query: Query<&mut Scoreboard>
+) {
+    commands.spawn((
+        if score_query.single().score > highscore_query.0 {
+            highscore_query.0 = score_query.single().score;
+            text_from_str(
+                &assets,
+                "New highscore!",
+                INPUT_HINT_FONT_SIZE,
+                Color::TOMATO,
+                HIGHSCORE_Y
+            )
+        } else {
+            text_from_str(
+                &assets,
+                format!("Highscore: {}", highscore_query.0).as_str(),
+                INPUT_HINT_FONT_SIZE,
+                Color::RED,
+                HIGHSCORE_Y
+            )
+        },
+        OnCrashedScreen
     ));
 }
