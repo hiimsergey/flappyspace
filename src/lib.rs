@@ -84,18 +84,13 @@ pub fn cleanup<T: Component>(
 /// Is applied in menu and game over screen
 pub fn lobby_input(
     mut commands: Commands,
-    mut ship_query: Query<(&mut TextureAtlasSprite, &mut Ship)>,
     mut game_state: ResMut<NextState<GameState>>,
     assets: Res<AssetServer>,
     key: Res<Input<KeyCode>>
 ) {
-    let (mut sprite, mut ship) = ship_query.single_mut();
-
-    // If user presses Enter, launches game
-    if key.just_pressed(KeyCode::Return) {
+    // If user presses X, launches game
+    if key.just_pressed(KeyCode::X) {
         play_sound(&mut commands, &assets, "start");
-        sprite.index = 1;
-        ship.velocity = JUMP_VELOCITY;
         game_state.set(GameState::Game);
     }
 
@@ -141,7 +136,7 @@ pub fn spawn_rock(
     y: f32
 ) {
     // Base case
-    if y > TOP_BOUND { return }
+    if y > TOP_BOUND + 64. { return }
 
     // Spawns rock
     commands.spawn((
@@ -163,6 +158,38 @@ pub fn spawn_rock(
     let y_distance = fastrand::u8(ROCK_DISTANCE_RANGE) as f32;
 
     spawn_rock(commands, assets, y + y_distance);
+}
+
+/// Spawns the only Ship entity in the game at the center of the screen
+/// 
+/// The ship will be shown in the menu screen and in the gameplay.
+pub fn spawn_ship(
+    mut commands: Commands,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    assets: Res<AssetServer>
+) {
+    // Loads the sprite sheet
+    let texture_atlas = TextureAtlas::from_grid(
+        assets.load("sprites/ship.png"),
+        Vec2::new(12., 10.),
+        6, 1, None, None
+    );
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+    // Spawns the entity
+    commands.spawn((
+        SpriteSheetBundle {
+            texture_atlas: texture_atlas_handle,
+            sprite: TextureAtlasSprite::new(1),
+            // Sets the spawn coordinates
+            // z = 1.1 lets the ship appear before the rocks and score
+            transform: Transform::from_xyz(0., 0., 1.1)
+                .with_scale(Vec3::splat(3.)),
+            ..default()
+        },
+        ShipAnimationTimer(Timer::from_seconds(0.4, TimerMode::Repeating)),
+        Ship { velocity: JUMP_VELOCITY }
+    ));
 }
 
 /// Returns a Text2dBundle to be spawned later

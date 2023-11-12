@@ -26,44 +26,28 @@ impl Plugin for GamePlugin {
     }
 }
 
+/// Moves every present Rock using ROCK_VELOCITY, despawns it if ROCK_DESPAWN_X
+/// coordinate is crossed
+pub fn move_rocks(
+    mut commands: Commands,
+    mut rock_query: Query<(Entity, &mut Transform), With<Rock>>,
+    time: Res<Time>
+) {
+    for (rock_entity, mut transform) in rock_query.iter_mut() {
+        transform.translation.x -= ROCK_VELOCITY * time.delta_seconds();
+
+        if transform.translation.x < ROCK_DESPAWN_X {
+            commands.entity(rock_entity).despawn();
+        }
+    }
+}
+
 /// Loads RockTimer with a random duration defined by ROCK_SPAWN_RATE
 fn load_rock_timer(mut commands: Commands) {
     commands.insert_resource(RockTimer(Timer::from_seconds(
         fastrand::u8(ROCK_SPAWN_RATE) as f32 * 0.25,
         TimerMode::Once
     )));
-}
-
-/// Spawns invisible scoreboard on screen, gets turned visible later
-/// 
-/// See also: [`periodic_waves`]
-fn spawn_scoreboard_and_rock(
-    mut commands: Commands,
-    assets: Res<AssetServer>
-) {
-    commands.spawn((
-        text_from_str(
-            &assets, "-2", HEADING_FONT_SIZE, Color::BLACK, HEADING_Y
-        ), Scoreboard { score: -2 }
-    ));
-
-    spawn_rock(commands, assets, BOTTOM_BOUND);
-}
-
-/// Makes score visible by turning the color white
-///
-/// Since it takes some time for the rock waves to come closer, I see no
-/// meaning in starting to count the score instanty. Thus, the scoreboard
-/// gets initialised with the value -2.
-///
-/// See also: [`spawn_scoreboard_and_rock`]
-fn unhide_scoreboard(
-    mut score_query: Query<&mut Scoreboard>,
-    mut score_text_query: Query<&mut Text, With<Scoreboard>>
-) {
-    if score_query.single_mut().score == 0 {
-        score_text_query.single_mut().sections[0].style.color = Color::WHITE;
-    }
 }
 
 /// Tracks RockTimer, increments score and launches new wave
@@ -95,19 +79,35 @@ fn periodic_waves(
     }
 }
 
-/// Moves every present Rock using ROCK_VELOCITY, despawns it if ROCK_DESPAWN_X
-/// coordinate is crossed
-fn move_rocks(
+/// Spawns invisible scoreboard on screen, gets turned visible later
+/// 
+/// See also: [`periodic_waves`]
+fn spawn_scoreboard_and_rock(
     mut commands: Commands,
-    mut rock_query: Query<(Entity, &mut Transform), With<Rock>>,
-    time: Res<Time>
+    assets: Res<AssetServer>
 ) {
-    for (rock_entity, mut transform) in rock_query.iter_mut() {
-        transform.translation.x -= ROCK_VELOCITY * time.delta_seconds();
+    commands.spawn((
+        text_from_str(
+            &assets, "-2", HEADING_FONT_SIZE, Color::BLACK, HEADING_Y
+        ), Scoreboard { score: -2 }
+    ));
 
-        if transform.translation.x < ROCK_DESPAWN_X {
-            commands.entity(rock_entity).despawn();
-        }
+    spawn_rock(commands, assets, BOTTOM_BOUND);
+}
+
+/// Makes score visible by turning the color white
+///
+/// Since it takes some time for the rock waves to come closer, I see no
+/// meaning in starting to count the score instanty. Thus, the scoreboard
+/// gets initialised with the value -2.
+///
+/// See also: [`spawn_scoreboard_and_rock`]
+fn unhide_scoreboard(
+    mut score_query: Query<&mut Scoreboard>,
+    mut score_text_query: Query<&mut Text, With<Scoreboard>>
+) {
+    if score_query.single_mut().score == 0 {
+        score_text_query.single_mut().sections[0].style.color = Color::WHITE;
     }
 }
 

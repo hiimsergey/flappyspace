@@ -46,7 +46,7 @@ fn spawn_about_text(mut commands: Commands, assets: Res<AssetServer>) {
     commands.spawn((
         text_from_str(
             &assets,
-            "Press Enter to exit",
+            "Press X to exit",
             INPUT_HINT_FONT_SIZE,
             ABOUT_TEXT_COLOR,
             INPUT_HINT_ONE_Y
@@ -54,12 +54,12 @@ fn spawn_about_text(mut commands: Commands, assets: Res<AssetServer>) {
     ));
 }
 
-/// Checks for user input (Enter) to launch main menu
+/// Checks for user input (spacebar) to launch main menu
 fn about_input(
     mut game_state: ResMut<NextState<GameState>>,
     key: Res<Input<KeyCode>>
 ) {
-    if key.just_pressed(KeyCode::Return) {
+    if key.just_pressed(KeyCode::X) {
         game_state.set(GameState::Menu);
     }
 }

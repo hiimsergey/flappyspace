@@ -68,7 +68,7 @@ pub const ABOUT_TEXT: &str = "Flappy Space
 Built with Bevy Engine
 <https://bevyengine.org>
 
-v1.1.0  GPL-3.0 License";
+v1.1.1  GPL-3.0 License";
 
 /// Font size of content in About screen
 pub const ABOUT_TEXT_FONT_SIZE: f32 = 30.;
