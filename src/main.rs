@@ -70,9 +70,6 @@ fn setup(
     // Spawns default camera setup
     commands.spawn(Camera2dBundle::default());
 
-    // Spawns in-game-independent highscore counter
-    // TODO
-
     // Since Bevy doesn't provide a way to add a window icon yet, I use winit
     // to do so. Thus, bevy_embedded_assets doesn't include the icon in the
     // executable. The below code checks if the icon is next to it and adds it,
