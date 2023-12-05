@@ -8,7 +8,7 @@ Written with [Bevy](https://bevyengine.org) in [Rust](https://rust-lang.org).
 Press the spacebar to jump. Dodge the asteroids. That's it. Yippie.
 
 ## Setup
-Under **Releases**, you can download the binary. As of now, there is only Linux.
+Under **Releases**, you can download the binary.
 
 If you have `cargo` installed, you can compile the game from source:
 
